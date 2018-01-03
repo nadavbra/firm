@@ -2,8 +2,10 @@ What is FIRM?
 --------
 
 FIRM (Functional Impact Rating at the Molecular-level) is a machine-learning model for predicting the functional impact of genetic variants (currently focusing only on missense variants affecting protein sequences). FIRM assigns variants with scores between 0 (harmless) to 1 (harmful). The model can be easily installed and run as a standalone Python module, and it is sufficiently fast (and parallelizable) to analyze full genomes.
+
 Unlike most tools and methods that assess the effect of genetic variants, which consider functional impact at the level of the whole organism (e.g. whether it is pathogenic or benign), FIRM predicts functional impacts at the molecular level, namely whether the molecular funtion of the affected protein is compromised as a result of the variant, regardless of whether or not this molecular-level impact has a critical downstream effect at the organism level. To achieve this goal, it relies only on biochemical and biophysical proteomic features, without making use of evolutionary data (e.g. conservation metrics). The model relies on features extracted from the high-dimensional proteomic context of the variant (1,109 features in total), which include rich annotations from UniProt and Pfam.
 The available classifier has been trained on 37,008 annotated variants from the ClinVar dataset. 
+
 Currently, FIRM supports only the human genome.
 
 
