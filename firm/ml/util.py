@@ -1,6 +1,8 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
 import os
+from math import ceil
 from datetime import datetime
 
 import numpy as np
@@ -49,7 +51,7 @@ def distirbute_with_callback(thread_pool, func, args, callback):
 
     for arg in args:
         async_result = thread_pool.apply_async(func, [arg], callback = callback)
-        async_results += [async_result]
+        async_results.append(async_result)
 
     for async_result in async_results:
         

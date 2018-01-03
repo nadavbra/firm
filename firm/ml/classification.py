@@ -12,18 +12,18 @@ from .metric_helper import specificity_score
 
 class Classifier(object):
 
-    def __init__(self, feature_extractor_creator, model = None, feature_selection = None, default_prob_threshold = None, \
-            prob_adjustment_table = None, worker_setup_hook = None, worker_setup_hook_params = None):
+    def __init__(self, feature_extractor_creator, feature_extractor_creator_args = [], feature_extractor_creator_kwargs = {}, \
+            model = None, feature_selection = None, default_prob_threshold = None, prob_adjustment_table = None):
 
         self.feature_extractor_creator = feature_extractor_creator
-        self.feature_extractor = feature_extractor_creator()
+        self.feature_extractor_creator_args = feature_extractor_creator_args
+        self.feature_extractor_creator_kwargs = feature_extractor_creator_kwargs
+        self.feature_extractor = feature_extractor_creator(*feature_extractor_creator_args, **feature_extractor_creator_kwargs)
         self.model = model
         self.feature_selection = feature_selection
         self.default_prob_threshold = default_prob_threshold
         self.prob_adjustment_table = prob_adjustment_table
-        self.worker_setup_hook = worker_setup_hook
-        self.worker_setup_hook_params = worker_setup_hook_params
-        
+    
     def predict_proba(self, sample_or_samples, chunk_size = 512, thread_pool = None):
 
         bulk_input = is_iterable(sample_or_samples)
@@ -131,7 +131,8 @@ class Classifier(object):
         chunks_input_data = []
         
         for sample_chunk in sample_chunks:
-            chunks_input_data += [(self.worker_setup_hook, self.worker_setup_hook_params, self.feature_extractor_creator, chunk_start_index, sample_chunk)]
+            chunks_input_data.append((self.feature_extractor_creator, self.feature_extractor_creator_args, self.feature_extractor_creator_kwargs, \
+                    chunk_start_index, sample_chunk))
             chunk_start_index += len(sample_chunk)
 
         return chunks_input_data
@@ -153,7 +154,7 @@ class Classifier(object):
             max_value = (i + 1) * interval_length
             mask = (min_value <= y_tune_pred) & (y_tune_pred <= max_value)
             probability = y_tune[mask].mean()
-            self.prob_adjustment_table += [((min_value + max_value) / 2, probability)]
+            self.prob_adjustment_table.append(((min_value + max_value) / 2, probability))
             
 class AsyncClassifier(object):
     
@@ -167,7 +168,7 @@ class AsyncClassifier(object):
         
     def submit_samples(self, samples, callback):
         
-        self._active_submissions += [_ClassificationSubmission(callback, list(samples))]
+        self._active_submissions.append(_ClassificationSubmission(callback, list(samples)))
         n_pending_samples = self.n_pending_samples()
         log('Submitted %d new samples to classify. There are now %s pending samples.' % (len(samples), n_pending_samples))
         
@@ -208,7 +209,7 @@ class AsyncClassifier(object):
             if len(batch_samples) < self.batch_size:
                 
                 taken_samples = submission.pending_samples[:(self.batch_size - len(batch_samples))]
-                batch_samples += taken_samples
+                batch_samples.extend(taken_samples)
                 
                 submission.pending_samples = submission.pending_samples[len(taken_samples):]
                 submission.n_processing_samples += len(taken_samples)
@@ -228,7 +229,7 @@ class AsyncClassifier(object):
                 results = results[submission.n_processing_samples:]
                 
                 submission.n_processing_samples = 0
-                submission.pending_results += submission_results
+                submission.pending_results.extend(submission_results)
                 
                 if len(submission.pending_samples) == 0:
                     submission.callback(submission.pending_results)

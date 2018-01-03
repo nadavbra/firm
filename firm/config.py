@@ -2,6 +2,8 @@ from __future__ import absolute_import, division, print_function
 
 import os
 
+SRC_DIR = os.path.dirname(__file__)
+
 # PFAM_HMM_DIR should point to a directory with the all the necessary pfam HMM profiles.
 # It should containt the files: Pfam-A.hmm, Pfam-A.hmm.dat, Pfam-A.hmm.h3f, Pfam-A.hmm.h3i, Pfam-A.hmm.h3m, Pfam-A.hmm.h3p, active_site.dat.
 # It should also contain a subdirectory named profiles/. In the meantime, this subdirectory can be left empty. As you run FIRM on new proteins
@@ -33,3 +35,6 @@ PFAM_HMM_PROFILES_DIR = os.path.join(PFAM_HMM_DIR, 'profiles')
 # Paths for temporary files created by pfam_scores.py (%s indicates process ID, to allow running it with multiprocessing)
 TMP_FASTA_FILE_PATH = '/tmp/temp_pfam_seq_pid_%s.fasta'
 TMP_DOMAIN_RESULTS_FILE_PATH = '/tmp/temp_pfam_domain_results_pid_%s'
+
+# Unless you switch the file, do not change that.
+TRAINED_CLASSIFER_DUMP_FILE_PATH = os.path.join(SRC_DIR, 'data/classifier.pkl')

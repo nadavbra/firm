@@ -8,15 +8,15 @@ from Bio.SubsMat import MatrixInfo
 from .util import log
 from .aa_scales import aa_scales
 from .apply_scale import apply_scale
-from . import pfam_scores
+from .pfam_scores import get_ref_and_alt_scores
 from .ml.feature_engineering import CombinerFeatureExtractor, SimpleFeatureExtractor, OneHotEncodingFeatureExtractor, \
         CounterFeatureExtractor
 
 class FeatureExtractionSetup(object):
     def __init__(self, geneffect_setup):
         self.common_pfam_clans = geneffect_setup.pfam_data.common_pfam_clans
-        self.all_uniprot_boolean_tracks = geneffect_setup.pfam_data.all_uniprot_boolean_tracks
-        self.all_uniprot_categorical_tracks = geneffect_setup.pfam_data.all_uniprot_categorical_tracks
+        self.all_uniprot_boolean_tracks = geneffect_setup.all_uniprot_boolean_tracks
+        self.all_uniprot_categorical_tracks = geneffect_setup.all_uniprot_categorical_tracks
 
 def get_snp_effect_feature_extractor(setup):
     
@@ -75,9 +75,8 @@ def create_pfam_domain_feature_extractor(common_pfam_clans):
             
         if hit:
             try:
-                ref_score, alt_score = pfam_scores.get_ref_and_alt_scores(domain_record['hmm_name'], \
-                        snp_effect.affected_gene.uniprot_record.seq, snp_effect.protein_coordinate, snp_effect.ref_aa, \
-                        snp_effect.alt_aa)
+                ref_score, alt_score = get_ref_and_alt_scores(domain_record['hmm_name'], snp_effect.affected_gene.uniprot_record.seq, \
+                        snp_effect.protein_coordinate, snp_effect.ref_aa, snp_effect.alt_aa)
             except:
                 log('%s: failed calculating pfam scores.' % snp_effect)
             
@@ -114,9 +113,9 @@ def create_track_distances_and_hits_feature_extractor(all_uniprot_boolean_tracks
                     
                 hit = (distance == 0)
                 miss = (not hit and not track.get_values() <= set([False]))
-                boolean_track_features += [distance, hit, miss]
+                boolean_track_features.extend([distance, hit, miss])
             else:
-                boolean_track_features += [INFINITE_DISTANCE_VALUE, False, False]
+                boolean_track_features.extend([INFINITE_DISTANCE_VALUE, False, False])
         
         for track_name, values in all_uniprot_categorical_tracks:
             for value in (values + [None]):
@@ -130,12 +129,12 @@ def create_track_distances_and_hits_feature_extractor(all_uniprot_boolean_tracks
 
                     hit = (distance == 0)
                     miss = (not hit and not track.get_values() <= set([None]))
-                    categorical_track_features += [distance, hit, miss]
+                    categorical_track_features.extend([distance, hit, miss])
                 else:
                     if value is None:
-                        categorical_track_features += [0, True, False]
+                        categorical_track_features.extend([0, True, False])
                     else:
-                        categorical_track_features += [INFINITE_DISTANCE_VALUE, False, True]
+                        categorical_track_features.extend([INFINITE_DISTANCE_VALUE, False, True])
             
         return boolean_track_features + categorical_track_features
     
@@ -199,17 +198,17 @@ def create_context_track_counts_feature_extractor(context_name, left_size, right
             if track_name in uniprot_record.boolean_tracks:
                 track_count = uniprot_record.boolean_tracks[track_name].count_values(start_bound = start_bound, \
                         end_bound = end_bound).get(True, 0)
-                boolean_track_counts += [track_count]
+                boolean_track_counts.append(track_count)
             else:
-                boolean_track_counts += [0]
+                boolean_track_counts.append(0)
                 
         for track_name, values in all_uniprot_categorical_tracks:
             if track_name in uniprot_record.categorical_tracks:
                 track_counts = uniprot_record.categorical_tracks[track_name].count_values(total_length = total_length, \
                         start_bound = start_bound, end_bound = end_bound)
-                categorical_track_counts += [track_counts.get(value, 0) for value in (values + [None])]
+                categorical_track_counts.extend([track_counts.get(value, 0) for value in (values + [None])])
             else:
-                categorical_track_counts += (len(values) * [0] + [context_length])
+                categorical_track_counts.extend(len(values) * [0] + [context_length])
                 
         return boolean_track_counts + categorical_track_counts
                 

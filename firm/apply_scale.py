@@ -22,7 +22,7 @@ def _pure_python_apply_scale(seq, scale_values, output_buffer):
 
 try:
     import pyximport; pyximport.install()
-    from _apply_scale import _apply_scale
+    from ._apply_scale import _apply_scale
 except:
     log('apply_scale.py failed using Cython, will use a (slower) pure-python implementation instead.')
     _apply_scale = _pure_python_apply_scale

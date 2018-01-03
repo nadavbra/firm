@@ -8,21 +8,18 @@ from itertools import chain
 import numpy as np
 import pandas as pd
 
-from IPython.display import display
-from ipywidgets import FloatProgress
-
 from .util import log, IDENTITY_FUNCTION
 
 def invoke_feature_extractor_to_matrix(data, verbose = True):
-    
-    worker_setup_hook, worker_setup_hook_params, feature_extractor_creator, meta_data, samples = data
-    worker_setup_hook(worker_setup_hook_params)
-    
-    if verbose:
-        log('Extracting features from [%s]...' % meta_data)
-    
     try:
-        return meta_data, feature_extractor_creator().create_features_as_matrix(samples)
+    
+        feature_extractor_creator, feature_extractor_creator_args, feature_extractor_creator_kwargs, meta_data, samples = data
+        feature_extractor = feature_extractor_creator(*feature_extractor_creator_args, **feature_extractor_creator_kwargs)
+    
+        if verbose:
+            log('Extracting features from [%s]...' % meta_data)
+    
+        return meta_data, feature_extractor.create_features_as_matrix(samples)
     except:
         # Since this method is run through the multiprocessing.Pool interface, only the exception message is shown, and not
         # the stacktrace. 
@@ -81,6 +78,10 @@ class FeatureExtractor(object):
         '''
         
         if show_progress_bar:
+            
+            from IPython.display import display
+            from ipywidgets import FloatProgress
+            
             progress_bar = FloatProgress(min = 0, max = len(samples) - 1)
             display(progress_bar)
 
@@ -221,13 +222,13 @@ class SimpleFeatureExtractor(FeatureExtractor):
             else:
                 
                 if consequent_simple_features > 0:
-                    self._feature_transformations += [consequent_simple_features]
+                    self._feature_transformations.append(consequent_simple_features)
                     consequent_simple_features = 0
                 
-                self._feature_transformations += [(feature, feature.n_features())]
+                self._feature_transformations.append((feature, feature.n_features()))
         
         if consequent_simple_features > 0:
-            self._feature_transformations += [consequent_simple_features]
+            self._feature_transformations.append(consequent_simple_features)
             
 class OneHotEncodingFeatureExtractor(FeatureExtractor):
 

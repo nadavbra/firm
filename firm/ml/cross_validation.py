@@ -23,7 +23,7 @@ def cross_validate(X, y, model, n_folds = 3, feature_selection = None, feature_n
         
         test_scores = estimate_model(X_train, y_train, X_test, y_test, model, feature_selection = feature_selection, \
                 feature_names = feature_names, report_removed_features = report_removed_features)
-        all_test_scores += [test_scores]
+        all_test_scores.append(test_scores)
     
         log('*' * 50)
         

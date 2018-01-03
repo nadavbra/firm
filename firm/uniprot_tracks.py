@@ -7,13 +7,13 @@ def setup_uniprot_tracks(geneffect_setup):
     all_uniprot_boolean_tracks = set()
     all_uniprot_categorical_tracks = defaultdict(set)
     
-    for uniprot_record in geneffect_setup.uniprot_records:
+    for uniprot_record in geneffect_setup.uniprot_records.values():
         
         uniprot_record.boolean_tracks, uniprot_record.categorical_tracks = parse_tracks_from_uniprot_record(uniprot_record.raw_biopython_record)
         all_uniprot_boolean_tracks |= set(uniprot_record.boolean_tracks.keys())
         
-        for track_name, track in uniprot_record.categorical_tracks:
-            all_uniprot_categorical_tracks[track_name] = all_uniprot_categorical_tracks[track_name] | tack.get_values()
+        for track_name, track in uniprot_record.categorical_tracks.items():
+            all_uniprot_categorical_tracks[track_name] = all_uniprot_categorical_tracks[track_name] | track.get_values()
         
     geneffect_setup.all_uniprot_boolean_tracks = list(sorted(all_uniprot_boolean_tracks))
     geneffect_setup.all_uniprot_categorical_tracks = list(sorted([(track_name, sorted(values)) for track_name, values in \
@@ -59,8 +59,8 @@ class Track(object):
         
     def add_entry(self, start, end, value):
         entry = TrackEntry(start, end, value)
-        self._entries += [entry]
-        self._entries_by_value[value] += [entry]
+        self._entries.append(entry)
+        self._entries_by_value[value].append(entry)
         
     def simplify(self):
         self._entries.sort()
@@ -72,7 +72,7 @@ class Track(object):
         value_entries = self._entries_by_value[value]
         
         if value == self.default_value:
-            value_entries += list(self._get_gap_entries(total_length))
+            value_entries.extend(self._get_gap_entries(total_length))
     
         if len(value_entries) == 0:
             return None
@@ -121,7 +121,7 @@ class Track(object):
     
         for entry in self._entries:
             
-            new_entries += [entry]
+            new_entries.append(entry)
             
             if len(new_entries) >= 2:
                 one_before_last_entry, last_entry = new_entries[-2:]
@@ -134,7 +134,7 @@ class Track(object):
         self._entries_by_value = defaultdict(list)
         
         for entry in self._entries:
-            self._entries_by_value[entry.value] += [entry]
+            self._entries_by_value[entry.value].append(entry)
             
     def _get_gap_entries(self, total_length):
         
