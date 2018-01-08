@@ -8,6 +8,9 @@ The available classifier has been trained on 37,008 annotated variants from the 
 
 Currently, FIRM supports only the human genome.
 
+If you use FIRM in work contributing to a scientific publication, we ask that you cite our publication:
+Nadav Brandes, Nathan Linial, Michal Linial. Modeling Functional Genetic Alteration in Cancer Reveals New Candidate Driver Genes. https://doi.org/10.1101/242354
+
 
 Usage
 --------
