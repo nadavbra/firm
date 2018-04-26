@@ -46,7 +46,7 @@ Dependencies:
 * pandas
 * biopython
 * scikit-learn
-* geneffect (https://github.com/nadavbra/geneffect)
+* geneffect (https://github.com/nadavbra/geneffect) - version 1.1 (not the newest)
 
 
 To install, just run:
