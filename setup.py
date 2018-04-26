@@ -29,7 +29,7 @@ setup(
         'pandas',
         'biopython',
         'scikit-learn',
-        'geneffect', # https://github.com/nadavbra/geneffect
+        'geneffect==1.1', # https://github.com/nadavbra/geneffect
     ],
     zip_safe = False,
 )
