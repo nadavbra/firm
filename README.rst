@@ -41,6 +41,8 @@ Usage
 Installation
 --------
 
+**Note: As of yet, we only support Python2 (an effort to make the code Python3-compatible is still ongoing).** 
+
 Dependencies:
 
 * numpy
