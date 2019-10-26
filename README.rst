@@ -16,7 +16,6 @@ Nadav Brandes, Nathan Linial, Michal Linial, Quantifying gene selection in cance
 Usage
 --------
 
-    >>> from __future__ import print_function
     >>> import multiprocessing, geneffect, firm
     >>> n_threads = 4
     >>> thread_pool = multiprocessing.Pool(n_threads)
