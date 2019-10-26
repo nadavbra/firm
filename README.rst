@@ -46,20 +46,16 @@ Dependencies:
 * pandas
 * biopython
 * scikit-learn
-* geneffect (https://github.com/nadavbra/geneffect)
 * cython (recommended)
+* geneffect (https://github.com/nadavbra/geneffect)
 
 
 To install, just run:
 
     python setup.py install
     
-Or:
     
-    pip install firm
-    
-    
-If you haven't installed geneffect before, make sure it is properly installed and configured (see: https://github.com/nadavbra/geneffect).
+If you haven't installed geneffect before, make sure it is properly configured (see instructions at: https://github.com/nadavbra/geneffect).
 
 After installtion, open config.py in your installation (where the "firm" module has been installed), and go over the instructions there. Specifically, you will need to prepare the directory ~/data/pfam/hmm with all of Pfam's HMM profiles for the human proteome. 
         
