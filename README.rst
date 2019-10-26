@@ -25,11 +25,11 @@ Usage
     >>> firm_classifier = firm.load_classifier(geneffect_setup)
     
     >>> snp = geneffect_setup.variant_interpreter.process_snp('17', 43082434, 'G', 'C')
-    >>> snp_gene_effect, = snp.gene_effects
+    >>> snp_gene_effect, = snp.cds_gene_effects
     >>> print(snp_gene_effect)
     P38398:R1443G
     >>> print(firm_classifier.predict_adjusted_proba(snp_gene_effect))
-    0.11450486371
+    0.11450486370956418
     
     >>> async_firm_classifier = firm.AsyncClassifier(firm_classifier.predict_adjusted_proba, thread_pool = thread_pool, n_threads = n_threads)
     >>> async_firm_classifier.submit_samples(2000 * [snp_gene_effect], callback = lambda scores: print(len(scores), scores[:10]))
@@ -41,22 +41,27 @@ Usage
 Installation
 --------
 
-**Note: As of yet, we only support Python2 (an effort to make the code Python3-compatible is still ongoing).** 
-
 Dependencies:
 
 * numpy
 * pandas
 * biopython
 * scikit-learn
-* geneffect (https://github.com/nadavbra/geneffect) - version 1.1 (not the newest)
+* geneffect (https://github.com/nadavbra/geneffect)
+* cython (recommended)
 
 
 To install, just run:
 
     python setup.py install
     
+Or:
     
+    pip install firm
+    
+    
+If you haven't installed geneffect before, make sure it is properly installed and configured (see: https://github.com/nadavbra/geneffect).
+
 After installtion, open config.py in your installation (where the "firm" module has been installed), and go over the instructions there. Specifically, you will need to prepare the directory ~/data/pfam/hmm with all of Pfam's HMM profiles for the human proteome. 
         
     
