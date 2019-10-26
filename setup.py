@@ -11,7 +11,7 @@ def readme():
 
 setup(
     name = 'firm',
-    version = '1.1.2',
+    version = '1.1.3',
     description = 'FIRM (Functional Impact Rating at the Molecular-level) is a machine-learning model for predicting the functional impact ' + \
             'of genetic variants.',
     long_description = readme(),
@@ -26,7 +26,8 @@ setup(
     ],
     package_data = {'firm': [
         '_apply_scale.pyx',
-        'data/classifier.pkl',
+        'data/classifier-py2.pkl',
+        'data/classifier-py3.pkl',
     ]},
     install_requires = [
         'numpy',
