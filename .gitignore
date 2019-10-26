@@ -2,3 +2,4 @@
 /dist/
 /build/
 /*.egg-info
+firm/_apply_scale.c
