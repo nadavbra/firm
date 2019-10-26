@@ -63,7 +63,7 @@ class Track(object):
         self._entries_by_value[value].append(entry)
         
     def simplify(self):
-        self._entries.sort()
+        self._entries.sort(key = TrackEntry.start_getter)
         self._replace_with_simplified_entries()
         self._reset_entries_by_value()
         
@@ -156,6 +156,8 @@ class Track(object):
             
 class TrackEntry(object):
 
+    start_getter = lambda entry: entry.start
+
     def __init__(self, start, end, value):
         self.start = start
         self.end = end
@@ -176,7 +178,7 @@ class TrackEntry(object):
         
     def merge_with(self, other):
         
-        first_entry, second_entry = sorted([self, other])
+        first_entry, second_entry = sorted([self, other], key = TrackEntry.start_getter)
     
         if first_entry.touches(second_entry):
             if first_entry.value == second_entry.value:
@@ -192,10 +194,7 @@ class TrackEntry(object):
                     return [first_entry]
         else:
             return [first_entry, second_entry]
-        
-    def __cmp__(self, other):
-        return cmp(self.start, other.start)
-        
+    
     def __repr__(self):
         return '[%d-%d]{%s}' % (self.start, self.end, str(self.value))
         

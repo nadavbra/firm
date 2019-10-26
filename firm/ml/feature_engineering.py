@@ -1,9 +1,13 @@
 from __future__ import absolute_import, division, print_function
 
 import traceback
-from StringIO import StringIO
 from collections import Counter
 from itertools import chain
+
+try:
+    from io import StringIO
+except:
+    from StringIO import StringIO
 
 import numpy as np
 import pandas as pd
@@ -112,7 +116,7 @@ class CombinerFeatureExtractor(FeatureExtractor):
         
         self._n_features_per_extractor = [feature_extractor.n_features() for feature_extractor in self.feature_extractors]
         self._feature_names_per_extractor = [feature_extractor.get_feature_names() for feature_extractor in self.feature_extractors]
-        assert map(len, self._feature_names_per_extractor) == self._n_features_per_extractor
+        assert list(map(len, self._feature_names_per_extractor)) == self._n_features_per_extractor
         
         self._n_features = sum(self._n_features_per_extractor)
         self._feature_names = [feature_name for feature_names in self._feature_names_per_extractor for \
@@ -192,7 +196,7 @@ class SimpleFeatureExtractor(FeatureExtractor):
             if isinstance(feature_transformation, int):
                 n_features = feature_transformation
                 feature_array[output_index:(output_index + n_features)] = \
-                        map(float, top_level_feature_values[top_level_index:(top_level_index + n_features)])
+                        list(map(float, top_level_feature_values[top_level_index:(top_level_index + n_features)]))
                 top_level_index += n_features
                 output_index += n_features
             else:
@@ -255,7 +259,7 @@ class OneHotEncodingFeatureExtractor(FeatureExtractor):
         
         sample_value = self.value_extraction_function(sample)
         feature_array[:] = 0
-        
+                
         if sample_value in self.value_to_index:
             feature_array[self.value_to_index[sample_value]] = 1
         
@@ -269,7 +273,7 @@ class CounterFeatureExtractor(FeatureExtractor):
         
         self.value_to_index = {value: i for i, value in enumerate(optional_values)}
         self.final_feature_names = [feature_name_prefix + str(value) for value in optional_values]
-        
+                
     def n_features(self):
         return len(self.optional_values)
         

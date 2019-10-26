@@ -26,7 +26,7 @@ aa_scales = {
     'surface_accessibility': {'A': 0.815, 'R': 1.475, 'N': 1.296, 'D': 1.283, 'C': 0.394, 'Q': 1.348, 'E': 1.445, 'G': 0.714, 'H': 1.180, 'I': 0.603, 'L': 0.603, 'K': 1.545, 'M': 0.714, 'F': 0.695, 'P': 1.236, 'S': 1.115, 'T': 1.184, 'W': 0.808, 'Y': 1.089, 'V': 0.606}, 
     
     # 2 Janin Interior to surface transfer energy scale
-    'surface_transfer_energy': {'A': 0.28, 'R': -1.14, 'N': -0.55, 'D': -0.52, 'C': 0.97, 'Q': -0.69, 'E': -1.01, 'G': 0.43, 'H': -0.31, 'I': 0.60, 'L': 0.60, 'K': -1.62, 'M': 0.43, 'F': 0.46, 'P': -0.42, 'S': -0.19, 'T': -0.32, 'W': 0.29, 'Y': -0.15, 'V': 0.60 }, 
+    'surface_transfer_energy': {'A': 0.28, 'R': -1.14, 'N': -0.55, 'D': -0.52, 'C': 0.97, 'Q': -0.69, 'E': -1.01, 'G': 0.43, 'H': -0.31, 'I': 0.60, 'L': 0.60, 'K': -1.62, 'M': 0.43, 'F': 0.46, 'P': -0.42, 'S': -0.19, 'T': -0.32, 'W': 0.29, 'Y': -0.15, 'V': 0.60}, 
     
     # Positive values indicate proteins that are likely to be ordered
     'ordered': {'A': 0.06, 'R': 0.180, 'N': 0.007, 'D': 0.192, 'C': 0.02, 'Q': 0.318, 'E': 0.736, 'G': 0.166, 'H': 0.303, 'I': -0.486, 'L': -0.326, 'K': 0.586, 'M': -0.397, 'F': -0.697, 'P': 0.987, 'S': 0.341, 'T': 0.059, 'W': -0.884, 'Y': -0.510, 'V': -0.121}, 
@@ -38,3 +38,5 @@ aa_scales = {
     'steric_param': {'A': 0.52, 'R': 0.68, 'N': 0.76, 'D': 0.76, 'C': 0.62, 'Q': 0.68, 'E': 0.68, 'G': 0.00, 'H': 0.70, 'I': 1.02, 'L': 0.98, 'K': 0.68, 'M': 0.78, 'F': 0.70, 'P': 0.36, 'S': 0.53, 'T': 0.50, 'W': 0.70, 'Y': 0.70, 'V': 0.76},
     'mutability': {'A': 100, 'R': 65, 'N': 134, 'D': 106, 'C': 20, 'Q': 93, 'E': 102, 'G': 49, 'H': 66, 'I': 96, 'L': 40, 'K': 56, 'M': 94, 'F': 41, 'P': 56, 'S': 120, 'T': 97, 'W': 18, 'Y': 41, 'V': 74},
 }
+
+ordered_aa_scale_names = ['gravy', 'ss_helix', 'ordered', 'mutability', 'steric_param', 'polarizability', 'flexibility', 'negative_charge', 'hydrophilicity', 'ss_turn', 'volume', 'surface_accessibility', 'charge', 'index_of_hydrophobicity', 'surface_transfer_energy', 'asa_in_tripeptide', 'ss_sheet', 'monoisotopic_protein_weights', 'aromaticity', 'positive_charge']

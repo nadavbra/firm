@@ -9,7 +9,7 @@ def load_classifier(geneffect_setup, dump_file_path = TRAINED_CLASSIFER_DUMP_FIL
     feature_extraction_setup = FeatureExtractionSetup(geneffect_setup)
     classifier = Classifier(get_snp_effect_feature_extractor, feature_extractor_creator_args = [feature_extraction_setup])
     
-    with open(dump_file_path, 'r') as f:
+    with open(dump_file_path, 'rb') as f:
         classifier.load(f)
     
     return classifier

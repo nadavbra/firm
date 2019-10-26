@@ -240,7 +240,7 @@ class AsyncClassifier(object):
         self._active_submissions = self._active_submissions[n_submissions_to_remove:]
         
 def predict_prob(model, X):
-    return zip(*model.predict_proba(X))[1]
+    return list(zip(*model.predict_proba(X)))[1]
     
 def find_prob_threshold(y_true, y_prob):
     

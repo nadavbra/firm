@@ -6,7 +6,7 @@ import pandas as pd
 from Bio.SubsMat import MatrixInfo
 
 from .util import log
-from .aa_scales import aa_scales
+from .aa_scales import aa_scales, ordered_aa_scale_names
 from .apply_scale import apply_scale
 from .pfam_scores import get_ref_and_alt_scores
 from .ml.feature_engineering import CombinerFeatureExtractor, SimpleFeatureExtractor, OneHotEncodingFeatureExtractor, \
@@ -30,8 +30,8 @@ def get_snp_effect_feature_extractor(setup):
 
     aa_substitution_feature_extractor = CombinerFeatureExtractor(
             [
-                OneHotEncodingFeatureExtractor('ref_aa_', ALL_AAS, lambda snp_effect: snp_effect.ref_aa),
-                OneHotEncodingFeatureExtractor('alt_aa_', ALL_AAS, lambda snp_effect: snp_effect.alt_aa),
+                OneHotEncodingFeatureExtractor('ref_aa_', ALL_AAS, lambda snp_effect: str(snp_effect.ref_aa)),
+                OneHotEncodingFeatureExtractor('alt_aa_', ALL_AAS, lambda snp_effect: str(snp_effect.alt_aa)),
             ] + \
             [
                 create_blosum_scores_feature_extractor(),
@@ -220,8 +220,8 @@ def create_context_track_counts_feature_extractor(context_name, left_size, right
 def create_scale_diff_feature_extractor(scale_name, scale_values):
     
     def extraction_function(snp_effect):
-        ref_value = scale_values.get(snp_effect.ref_aa, 0)
-        alt_value = scale_values.get(snp_effect.alt_aa, 0)
+        ref_value = scale_values.get(str(snp_effect.ref_aa), 0)
+        alt_value = scale_values.get(str(snp_effect.alt_aa), 0)
         absolute_diff = alt_value - ref_value
         relative_diff = 0 if ref_value == 0 else absolute_diff / ref_value
         return ref_value, alt_value, absolute_diff, relative_diff
@@ -235,7 +235,7 @@ def create_blosum_scores_feature_extractor():
     blosum_names, blosum_matrices = zip(*BLOSUM_OPTIONS)
     
     def extraction_function(snp_effect):
-        return [_get_blosum_score(blosum_matrix, snp_effect.ref_aa, snp_effect.alt_aa) for blosum_matrix in blosum_matrices]
+        return [_get_blosum_score(blosum_matrix, str(snp_effect.ref_aa), str(snp_effect.alt_aa)) for blosum_matrix in blosum_matrices]
     
     return SimpleFeatureExtractor(blosum_names, extraction_function)
     
@@ -280,6 +280,11 @@ def _replace_nan(value, nan_predicate = np.isnan, replace_with = 0):
         return replace_with
     else:
         return value
+        
+def _get_aa_scale_items():
+    keys = ordered_aa_scale_names
+    values = [aa_scales[key] for key in keys]
+    return list(zip(keys, values))
 
     
 INFINITE_DISTANCE_VALUE = 1000
@@ -302,4 +307,4 @@ NEIGHBORHOOD_OPTIONS = [
     ('right', 0, None),
 ]
 
-AA_SCALE_ITEMS = aa_scales.items()
+AA_SCALE_ITEMS = _get_aa_scale_items()
