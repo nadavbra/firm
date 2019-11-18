@@ -4,6 +4,7 @@ import sys
 
 from setuptools import setup
 from Cython.Build import cythonize
+import numpy as np
         
 def readme():
     with open('README.rst', 'r') as f:
@@ -37,5 +38,6 @@ setup(
         'geneffect', # https://github.com/nadavbra/geneffect
     ],
     ext_modules = cythonize('firm/_apply_scale.pyx', compiler_directives = dict(language_level = sys.version_info.major)),
+    include_dirs = [np.get_include()],
     zip_safe = False,
 )
