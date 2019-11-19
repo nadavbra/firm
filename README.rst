@@ -1,5 +1,5 @@
 What is FIRM?
---------
+==========
 
 FIRM (Functional Impact Rating at the Molecular-level) is a machine-learning model for predicting the functional impact of genetic variants (currently focusing only on missense variants affecting protein sequences). FIRM assigns variants with scores between 0 (harmless) to 1 (harmful). The model can be easily installed and run as a standalone Python module, and it is sufficiently fast (and parallelizable) to analyze full genomes.
 
@@ -14,7 +14,7 @@ Nadav Brandes, Nathan Linial, Michal Linial, Quantifying gene selection in cance
 
 
 Usage
---------
+==========
 
     >>> import multiprocessing, geneffect, firm
     >>> n_threads = 4
@@ -38,7 +38,7 @@ Usage
 
 
 Installation
---------
+==========
 
 Dependencies:
 
@@ -50,7 +50,20 @@ Dependencies:
 * geneffect (https://github.com/nadavbra/geneffect)
 
 
-To install, just run:
+Automatic installation (using the installation script)
+----------
+
+    >>> wget https://raw.githubusercontent.com/nadavbra/firm/master/install_firm.sh
+    >>> chmod a+x install_firm.sh
+    >>> ./install_firm.sh
+    
+The installation script will also install geneffect and all the other dependencies.
+
+
+Manual installation
+----------
+
+Clone the project and run:
 
     python setup.py install
     
@@ -61,7 +74,7 @@ After installtion, open config.py in your installation (where the "firm" module 
         
     
 Replicating the model training
---------
+==========
 
 (only for advanced users interested in in-depth understanding of the model)
 
