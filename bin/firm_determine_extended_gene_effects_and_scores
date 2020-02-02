@@ -1,0 +1,151 @@
+#! /usr/bin/env python3
+
+from __future__ import absolute_import, division, print_function
+
+import os
+import json
+import multiprocessing
+import argparse
+
+import pandas as pd
+
+import geneffect
+import firm
+from firm.util import log
+    
+def create_gene_record(gene):
+    
+    cds_coordinates = [coordinate for cds_exon in gene.canonical_cds_isoform.cds_exons for coordinate in \
+            [cds_exon.chromosome_start, cds_exon.chromosome_end]]
+
+    return [
+        gene.uniprot_record.id,
+        gene.symbol,
+        gene.name,
+        list(gene.refseq_ids),
+        gene.canonical_cds_isoform.chromosome,
+        min(cds_coordinates),
+        max(cds_coordinates),
+    ]
+    
+def create_gene_dataset(geneffect_setup):
+    return pd.DataFrame(map(create_gene_record, geneffect_setup.genes), columns = ['uniprot_id', 'symbol', 'name', 'refseq_ids', \
+            'chr', 'cds_start', 'cds_end'])
+            
+def get_or_create_gene_dataset(genes_dir, geneffect_setup):
+    
+    gene_dataset = create_gene_dataset(geneffect_setup)
+    gene_dataset_csv_file_path = os.path.join(genes_dir, 'genes_%s.csv' % geneffect_setup._config_setup.ref_genome)
+    
+    if os.path.exists(gene_dataset_csv_file_path):
+        assert (gene_dataset['uniprot_id'] == pd.read_csv(gene_dataset_csv_file_path, index_col = 0)['uniprot_id']).all()
+        log('The %d genes in the created gene dataset are identical to the ones in the existing CSV file: %s' % (len(gene_dataset), \
+                gene_dataset_csv_file_path))
+    else:
+        gene_dataset.to_csv(gene_dataset_csv_file_path)
+        log('Saved the gene dataset (%d genes) into the CSV file: %s' % (len(gene_dataset), gene_dataset_csv_file_path))
+        
+    return gene_dataset
+    
+def process_variant(variant_record, geneffect_setup, user_args):
+    
+    chrom, pos, ref, alt = variant_record[user_args.chrom_col], variant_record[user_args.pos_col], variant_record[user_args.allele1_col], \
+            variant_record[user_args.allele2_col]
+    
+    if user_args.is_allele1_ref_col is not None:
+    
+        is_allele1_ref = variant_record[user_args.is_allele1_ref_col]
+    
+        if pd.isnull(is_allele1_ref):
+            return None
+        elif not is_allele1_ref:
+            ref, alt = alt, ref
+    
+    return geneffect_setup.variant_interpreter.process_variant(chrom, pos, ref, alt)
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(description = 'Determine the gene effects and effect scores of a given list of variants, using an extended ' + \
+            'policy that also assigns scores to non-missense variants (using siplistic, rule-based criteria). Note that the effect scores ' + \
+            'produced by this tool are reversed to the scores produced by FIRM\'s programmatic API (here 0 denotes complete damage, and 1 no effect).')
+    parser.add_argument('--variants-csv-file', dest = 'variants_csv_file', metavar = '/path/to/variants.csv', type = str, required = True, \
+            help = 'The list of input variants to process (CSV format).')
+    parser.add_argument('--output-effects-file', dest = 'output_effects_file', metavar = '/path/to/output_effects.jsonl', type = str, required = True, \
+            help = 'The output file where the effects of the input variants will be stored in JSON-lines format, i.e. each row will be a JSON ' + \
+            'string representing the gene effects of the variant in the corresponding line in the input CSV file. Each JSON string will be a ' + \
+            'dictionary mapping gene index to the variant\'s list of effects on the gene, each is a pair of i) effect description and ii) effect score.')
+    parser.add_argument('--genes-dir', dest = 'genes_dir', metavar = '/path/to/genes/dir/', type = str, required = True, help = 'The directory ' + \
+            'in which the dataset of all genes is expected to be found, or to be saved into (if it doesn\'t exist). The gene dataset (for a given ' + \
+            'version of the reference genome) is a CSV file specifying all protein-coding genes that can be processed by geneffect. The gene ' + \
+            'indices (used in the output effects file) are simply the row number of the genes in that CSV file.')
+    parser.add_argument('--ref-genome', dest = 'ref_genome', metavar = 'GRCh38/GRCh37', type = str, required = True, help = 'The version of the ' + \
+            'reference genome that the input variants are specified by.')
+    parser.add_argument('--chrom-col', dest = 'chrom_col', metavar = '<csv_col_name>', type = str, default = 'chrom', help = 'The column in the ' + \
+            'input CSV file storing the chromosome name of each variant.')
+    parser.add_argument('--pos-col', dest = 'pos_col', metavar = '<pos_col_name>', type = str, default = 'pos', help = 'The column in the ' + \
+            'input CSV file storing the chromosomal position/coordinate of each variant.')
+    parser.add_argument('--allele1-col', dest = 'allele1_col', metavar = '<allele1_col_name>', type = str, default = 'allele1', help = 'The ' + \
+            'column in the input CSV file storing the first allele of each variant.')
+    parser.add_argument('--allele2-col', dest = 'allele2_col', metavar = '<allele2_col_name>', type = str, default = 'allele2', help = 'The ' + \
+            'column in the input CSV file storing the second allele of each variant.')
+    parser.add_argument('--is-allele1-ref-col', dest = 'is_allele1_ref_col', metavar = '<is_allele1_ref_col>', type = str, default = None, \
+            help = 'The boolean column in the input CSV file storing whether allele1 (true) or allele2 (false) is the reference allele. If empty ' + \
+            '(N/A) for a certain variant, this variant will be ignored (it will result in no determined effects). If not provided, allele1 will ' + \
+            'always be assumed to be the reference allele.')
+    parser.add_argument('--n-threads', dest = 'n_threads', metavar = '<n_threads>', type = int, default = multiprocessing.cpu_count(), \
+            help = 'Number of threads to use when applying FIRM on missense variants. Will use all the CPU\'s cores by default.')
+    parser.add_argument('--chunk-size', dest = 'chunk_size', metavar = '<chunk_size>', type = int, default = 1000000, help = 'To save memory, ' + \
+            'the input variants will be loaded in chunks of that size (default is 1M).')
+    args = parser.parse_args()
+    
+    args.variants_csv_file, args.output_effects_file, args.genes_dir = map(os.path.expanduser, [args.variants_csv_file, args.output_effects_file, \
+            args.genes_dir])
+
+    if not os.path.isfile(args.variants_csv_file):
+        parser.error('No such file: %s' % args.variants_csv_file)
+        
+    if not os.path.isdir(os.path.dirname(args.output_effects_file)):
+        parser.error('Directory doesn\'t exist: %s' % os.path.dirname(args.output_effects_file))
+        
+    if not os.path.isdir(args.genes_dir):
+        parser.error('No such directory: %s' % args.genes_dir)
+        
+    if args.n_threads <= 0:
+        parser.error('Number of threads must be positive.')
+        
+    if args.chunk_size <= 0:
+        parser.error('Chunk size must be positive.')
+        
+    thread_pool = multiprocessing.Pool(args.n_threads)
+    
+    try:
+        
+        geneffect_setup = geneffect.Setup(args.ref_genome)
+        firm.setup_uniprot_tracks(geneffect_setup)
+        firm_classifier = firm.load_classifier(geneffect_setup)
+        firm_predict_batch_adjusted_proba_function = lambda missense_effects: firm_classifier.predict_adjusted_proba(missense_effects, \
+                thread_pool = thread_pool)
+        
+        gene_dataset = get_or_create_gene_dataset(args.genes_dir, geneffect_setup)
+        uniprot_id_to_gene_index = {uniprot_id: index for index, uniprot_id in gene_dataset['uniprot_id'].iteritems()}
+        gene_indexer = lambda gene: uniprot_id_to_gene_index[gene.uniprot_record.id]
+        
+        for chunk_index, chunk_variant_records in enumerate(pd.read_csv(args.variants_csv_file, dtype = {args.chrom_col: str}, \
+                chunksize = args.chunk_size)):
+            
+            chunk_first_variant_index = chunk_index * args.chunk_size
+            log('Processing variants %d-%d...' % (chunk_first_variant_index + 1, chunk_first_variant_index + len(chunk_variant_records)))
+            
+            log('Determining variant effects...')
+            chunk_variants = chunk_variant_records.apply(process_variant, geneffect_setup = geneffect_setup, user_args = args, axis = 1)
+        
+            chunk_variants_gene_effects_and_scores = firm.determine_extended_gene_effects_and_scores(chunk_variants, \
+                    firm_predict_batch_adjusted_proba_function = firm_predict_batch_adjusted_proba_function, gene_indexer = gene_indexer)
+                
+            with open(args.output_effects_file, 'w' if chunk_index == 0 else 'a') as f:
+                for variant_gene_effects_and_scores in chunk_variants_gene_effects_and_scores:
+                    f.write(json.dumps(variant_gene_effects_and_scores) + '\n')
+    finally:
+        thread_pool.close()
+    
+    log('Done.')
