@@ -37,6 +37,18 @@ Usage
     >>> async_firm_classifier.close()    
 
 
+Command-line interface
+==========
+
+As of version 1.2.0, FIRM has a command-line interface allowing to interpret a list of variants and determine their effect scores using a generalized scheme that also assigns rule-based scores to non-missense variants (the trained machine-learning predictor is only used for the missense variants). For details, see our recent paper: https://doi.org/10.1101/812289. 
+Note that the effect scores produced by the extended tool are reversed to the scores produced by FIRM's programmatic API (here 0 denotes complete damage, and 1 no effect).
+
+For more details, run:
+
+.. code-block:: cshell
+    
+    firm_determine_extended_gene_effects_and_scores --help
+
 Installation
 ==========
 
