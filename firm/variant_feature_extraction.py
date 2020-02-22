@@ -8,7 +8,7 @@ from Bio.SubsMat import MatrixInfo
 from .util import log
 from .aa_scales import aa_scales, ordered_aa_scale_names
 from .apply_scale import apply_scale
-from .pfam_scores import get_ref_and_alt_scores
+from .pfam_scores import create_missing_hmm_profiles, does_hmm_profile_exist, get_hmm_ref_and_alt_scores
 from .ml.feature_engineering import CombinerFeatureExtractor, SimpleFeatureExtractor, OneHotEncodingFeatureExtractor, \
         CounterFeatureExtractor
 
@@ -17,6 +17,7 @@ class FeatureExtractionSetup(object):
         self.common_pfam_clans = geneffect_setup.pfam_data.common_pfam_clans
         self.all_uniprot_boolean_tracks = geneffect_setup.all_uniprot_boolean_tracks
         self.all_uniprot_categorical_tracks = geneffect_setup.all_uniprot_categorical_tracks
+        create_missing_hmm_profiles(geneffect_setup.pfam_data.pfam_domains['hmm_name'].unique())
 
 def get_snp_effect_feature_extractor(setup):
     
@@ -73,12 +74,9 @@ def create_pfam_domain_feature_extractor(common_pfam_clans):
         ref_score = 0
         alt_score = 0
             
-        if hit:
-            try:
-                ref_score, alt_score = get_ref_and_alt_scores(domain_record['hmm_name'], snp_effect.affected_gene.uniprot_record.seq, \
-                        snp_effect.protein_coordinate, snp_effect.ref_aa, snp_effect.alt_aa)
-            except:
-                log('%s: failed calculating pfam scores.' % snp_effect)
+        if hit and does_hmm_profile_exist(domain_record['hmm_name']):
+            ref_score, alt_score = get_hmm_ref_and_alt_scores(domain_record['hmm_name'], snp_effect.affected_gene.uniprot_record.seq, \
+                    snp_effect.protein_coordinate, snp_effect.ref_aa, snp_effect.alt_aa)
             
         absolute_score_change = alt_score - ref_score
         relative_score_change = absolute_score_change / ref_score if ref_score > 0 else 0
