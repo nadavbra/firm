@@ -29,7 +29,7 @@ def create_gene_record(gene):
     ]
     
 def create_gene_dataset(geneffect_setup):
-    return pd.DataFrame(map(create_gene_record, geneffect_setup.genes), columns = ['uniprot_id', 'symbol', 'name', 'refseq_ids', \
+    return pd.DataFrame(list(map(create_gene_record, geneffect_setup.genes)), columns = ['uniprot_id', 'symbol', 'name', 'refseq_ids', \
             'chr', 'cds_start', 'cds_end'])
             
 def get_or_create_gene_dataset(genes_dir, geneffect_setup):

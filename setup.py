@@ -12,7 +12,7 @@ def readme():
 
 setup(
     name = 'firm',
-    version = '1.2.1',
+    version = '1.2.2',
     description = 'FIRM (Functional Impact Rating at the Molecular-level) is a machine-learning model for predicting the functional impact ' + \
             'of genetic variants.',
     long_description = readme(),
