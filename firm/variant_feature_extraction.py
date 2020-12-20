@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import pandas as pd
 
-from Bio.SubsMat import MatrixInfo
+from Bio.Align import substitution_matrices
 
 from .util import log
 from .aa_scales import aa_scales, ordered_aa_scale_names
@@ -291,9 +291,9 @@ ALL_AAS = list('ACDEFGHIKLMNPQSRTVWY')
 ALL_AAS_AND_DUMMY = ALL_AAS + ['_']
 
 BLOSUM_OPTIONS = [
-    ('BLOSUM45', MatrixInfo.blosum45),
-    ('BLOSUM62', MatrixInfo.blosum62),
-    ('BLOSUM80', MatrixInfo.blosum80),
+    ('BLOSUM45', substitution_matrices.load('BLOSUM45')),
+    ('BLOSUM62', substitution_matrices.load('BLOSUM62')),
+    ('BLOSUM80', substitution_matrices.load('BLOSUM80')),
 ]
 
 NEIGHBORHOOD_OPTIONS = [
