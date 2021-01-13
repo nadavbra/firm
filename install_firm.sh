@@ -3,7 +3,7 @@
 
 # Determine the Python version to use.
 
-# If a the environment variable PYTHON_CMD exists, then just use it.
+# If the environment variable PYTHON_CMD exists, then just use it.
 if ($?PYTHON_CMD) then
     set python_cmd = $PYTHON_CMD
     goto determine_final_python_version

@@ -1,6 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
-import sys
 import os
 
 SRC_DIR = os.path.dirname(__file__)
@@ -38,4 +35,4 @@ TMP_FASTA_FILE_PATH = '/tmp/temp_pfam_seq_pid_%s.fasta'
 TMP_DOMAIN_RESULTS_FILE_PATH = '/tmp/temp_pfam_domain_results_pid_%s'
 
 # Unless you switch the file, do not change that.
-TRAINED_CLASSIFER_DUMP_FILE_PATH = os.path.join(SRC_DIR, 'data/classifier-py%d.pkl' % sys.version_info.major)
+TRAINED_CLASSIFER_DUMP_FILE_PATH = os.path.join(SRC_DIR, 'data/classifier.pkl')

@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 from .config import TRAINED_CLASSIFER_DUMP_FILE_PATH
 from .variant_feature_extraction import FeatureExtractionSetup, get_snp_effect_feature_extractor
 from .ml.classification import Classifier

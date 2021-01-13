@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
-from sklearn.cross_validation import KFold
+from sklearn.model_selection import KFold
 from sklearn.metrics import confusion_matrix
 
 from .util import log
@@ -12,10 +12,10 @@ from .metric_helper import get_formatted_scores, calc_scores, format_scores
 def cross_validate(X, y, model, n_folds = 3, feature_selection = None, feature_names = None, report_removed_features = False, seed = None):
     
     log('Starting %d folds of cross validation...\n' % n_folds)
-    kf = KFold(len(y), shuffle = True, random_state = seed, n_folds = n_folds)
+    kf = KFold(n_splits = n_folds, shuffle = True, random_state = seed)
     all_test_scores = []
 
-    for train_index, test_index in kf:
+    for train_index, test_index in kf.split(X):
         
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]

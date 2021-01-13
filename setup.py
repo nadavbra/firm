@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, print_function
-
 import sys
 
 from setuptools import setup
@@ -12,7 +10,7 @@ def readme():
 
 setup(
     name = 'firm',
-    version = '1.2.3',
+    version = '1.3.0',
     description = 'FIRM (Functional Impact Rating at the Molecular-level) is a machine-learning model for predicting the functional impact ' + \
             'of genetic variants.',
     long_description = readme(),
@@ -27,11 +25,11 @@ setup(
     ],
     package_data = {'firm': [
         '_apply_scale.pyx',
-        'data/classifier-py2.pkl',
-        'data/classifier-py3.pkl',
+        'data/classifier.pkl',
     ]},
     scripts = [
         'bin/firm_determine_extended_gene_effects_and_scores',
+        'bin/firm_list_all_possible_cds_snps',
     ],
     install_requires = [
         'numpy',

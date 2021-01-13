@@ -1,0 +1,157 @@
+#! /usr/bin/env python3
+
+import os
+import multiprocessing
+import argparse
+
+import numpy as np
+import pandas as pd
+
+from Bio.Seq import Seq
+
+import geneffect
+from geneffect.variant_processing import SnpCDSGeneEffect, VariantAtTheEndOfInvalidGeneException
+import firm
+from firm.gene_dataset import get_or_create_gene_dataset
+from firm.util import log
+
+ALL_NTS = set(list('ACGT'))
+
+def to_seq(seq):
+    if isinstance(seq, Seq):
+        return seq
+    elif isinstance(seq, str):
+        return Seq(seq)
+    else:
+        raise ValueError('Unexpected type: %s' % type(seq))
+
+def to_chunks(generator, chunk_size):
+    
+    chunk = []
+    
+    for element in generator:
+        if len(chunk) >= chunk_size:
+            chunk = np.array(chunk)
+            yield chunk
+            chunk = []
+        else:
+            chunk.append(element)
+            
+    if len(chunk) > 0:
+        chunk = np.array(chunk)
+        yield chunk
+        
+def get_effect_type(gene_effect):
+    if gene_effect.destroys_start_codon() or gene_effect.introduced_stop_codon:
+        return 'nonsense'
+    elif gene_effect.is_synonymous():
+        return 'synonymous'
+    elif gene_effect.is_missense():
+        return 'missense'
+    else:
+        raise ValueError('Unexpected CDS gene effect type: %s' % cds_gene_effect)
+
+def generate_all_possible_snp_cds_gene_effects(geneffect_setup):
+    for gene in geneffect_setup.genes:
+        
+        cds_coordinate = 0
+        
+        for cds_exon in gene.canonical_cds_isoform.cds_exons:
+            for cds_ref_nt in cds_exon.seq:
+                
+                cds_coordinate += 1
+                
+                for cds_alt_nt in (ALL_NTS - {str(cds_ref_nt)}):
+                    try:
+                        # Notice that cds_ref_nt and cds_alt_nt refer to the strand that the gene is located on, which is not necessarily
+                        # the positive strand.
+                        yield SnpCDSGeneEffect(gene, cds_exon, cds_coordinate, cds_ref_nt, to_seq(cds_alt_nt))
+                    except VariantAtTheEndOfInvalidGeneException:
+                        continue
+                        
+def collect_results_as_df(gene_effects, effect_types, effect_scores, uniprot_id_to_gene_index):
+
+    results = []
+            
+    for gene_effect, effect_type, effect_score in zip(gene_effects, effect_types, effect_scores):
+        
+        gene_index = uniprot_id_to_gene_index[gene_effect.affected_gene.uniprot_record.id]
+        chrom = gene_effect.affected_gene.canonical_cds_isoform.chromosome
+        cds_exon_coordinate = gene_effect.cds_coordinate - gene_effect.affected_cds_exon.isoform_start + 1
+        
+        if gene_effect.affected_cds_exon.strand == '+':
+            pos = gene_effect.affected_cds_exon.chromosome_start + cds_exon_coordinate - 1
+            ref_nt = gene_effect.cds_ref_nt
+            alt_nt = gene_effect.cds_alt_nt
+        else:
+            pos = gene_effect.affected_cds_exon.chromosome_end - cds_exon_coordinate + 1
+            ref_nt = str(to_seq(gene_effect.cds_ref_nt).reverse_complement())
+            alt_nt = str(to_seq(gene_effect.cds_alt_nt).reverse_complement())
+            
+        results.append((gene_index, chrom, pos, ref_nt, alt_nt, str(gene_effect), effect_type, effect_score))
+        
+    return pd.DataFrame(results, columns = ['gene_index', 'chrom', 'pos', 'ref', 'alt', 'gene_effect', 'effect_type', 'effect_score'])
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(description = 'Creates a CSV file listing all possible single-nucleotide variants that affect the CDS of genes ' + \
+            'in the human reference genome, and calculates the effect scores of these variants. Synonymous variants are assigned effect scores of 0, ' + \
+            'nonsense variants are assigned effect scores of 1, and missense variants are assigned effect scores accordin to FIRM.')
+    parser.add_argument('--output', dest = 'output_csv_file_path', metavar = '/path/to/output.csv', type = str, required = True, \
+            help = 'The path of the output CSV file where the variants will be listed.')
+    parser.add_argument('--genes-dir', dest = 'genes_dir', metavar = '/path/to/genes/dir/', type = str, required = True, help = 'The directory ' + \
+            'in which the dataset of all genes is expected to be found, or to be saved into (if it doesn\'t exist). The gene dataset (for a given ' + \
+            'version of the reference genome) is a CSV file specifying all protein-coding genes that can be processed by geneffect. The gene ' + \
+            'indices (used in the output CSV file) are simply the row number of the genes in that CSV file.')
+    parser.add_argument('--ref-genome', dest = 'ref_genome', metavar = 'GRCh38/GRCh37', type = str, required = True, help = 'The version of the ' + \
+            'reference genome that the listed genes and variants will refer to.')
+    parser.add_argument('--n-threads', dest = 'n_threads', metavar = '<n_threads>', type = int, default = multiprocessing.cpu_count(), \
+            help = 'Number of threads to use when applying FIRM on missense variants. Will use all the CPU\'s cores by default.')
+    parser.add_argument('--chunk-size', dest = 'chunk_size', metavar = '<chunk_size>', type = int, default = 1000000, help = 'To save memory, ' + \
+            'variant effects will be processed and saved in chunks of that size (default is 1M).')
+    args = parser.parse_args()
+    
+    args.output_csv_file_path, args.genes_dir = map(os.path.expanduser, [args.output_csv_file_path, args.genes_dir])
+       
+    if not os.path.isdir(os.path.dirname(args.output_csv_file_path)):
+        parser.error('Directory doesn\'t exist: %s' % os.path.dirname(args.output_csv_file_path))
+        
+    if not os.path.isdir(args.genes_dir):
+        parser.error('No such directory: %s' % args.genes_dir)
+        
+    if args.n_threads <= 0:
+        parser.error('Number of threads must be positive.')
+    
+    thread_pool = multiprocessing.Pool(args.n_threads)
+    
+    try:
+        
+        geneffect_setup = geneffect.Setup(args.ref_genome)
+        firm.setup_uniprot_tracks(geneffect_setup)
+        firm_classifier = firm.load_classifier(geneffect_setup)
+                
+        gene_dataset = get_or_create_gene_dataset(args.genes_dir, geneffect_setup)
+        uniprot_id_to_gene_index = {uniprot_id: index for index, uniprot_id in gene_dataset['uniprot_id'].iteritems()}
+        is_first_chunk = True
+        
+        for gene_effects in to_chunks(generate_all_possible_snp_cds_gene_effects(geneffect_setup), args.chunk_size):
+        
+            log('Processing %d gene effects...' % len(gene_effects))
+            effect_types = np.array(list(map(get_effect_type, gene_effects)))
+            effect_scores = np.full(len(gene_effects), np.nan, dtype = float)
+            effect_scores[effect_types == 'synonymous'] = 0.0
+            effect_scores[effect_types == 'nonsense'] = 1.0
+            missense_mask = (effect_types == 'missense')
+            
+            log('Calculating effect scores for %d missense effects...' % missense_mask.sum())
+            effect_scores[missense_mask] = firm_classifier.predict_adjusted_proba(gene_effects[missense_mask], thread_pool = thread_pool)
+            assert not np.isnan(effect_scores).any()
+                              
+            log('Collecting and saving the results...')
+            collect_results_as_df(gene_effects, effect_types, effect_scores, uniprot_id_to_gene_index).to_csv(args.output_csv_file_path, \
+                    index = False, header = is_first_chunk, mode = 'w' if is_first_chunk else 'a')
+            is_first_chunk = False
+    finally:
+        thread_pool.close()
+    
+    log('Done.')
