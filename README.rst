@@ -65,7 +65,7 @@ Dependencies:
 * numpy
 * pandas
 * biopython
-* scikit-learn
+* scikit-learn (recommended version: 0.24)
 * cython (recommended)
 * geneffect (https://github.com/nadavbra/geneffect)
 
