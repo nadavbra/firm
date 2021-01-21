@@ -30,19 +30,20 @@ def to_chunks(generator, chunk_size):
     chunk = []
     
     for element in generator:
+    
+        chunk.append(element)
+    
         if len(chunk) >= chunk_size:
             chunk = np.array(chunk)
             yield chunk
-            chunk = []
-        else:
-            chunk.append(element)
+            chunk = []            
             
     if len(chunk) > 0:
         chunk = np.array(chunk)
         yield chunk
         
 def get_effect_type(gene_effect):
-    if gene_effect.destroys_start_codon() or gene_effect.introduced_stop_codon:
+    if gene_effect.introduced_stop_codon:
         return 'nonsense'
     elif gene_effect.is_synonymous():
         return 'synonymous'
