@@ -16,6 +16,9 @@ Nadav Brandes, Nathan Linial, Michal Linial, Quantifying gene selection in cance
 Usage
 ==========
 
+Python interface
+----
+    
     >>> import multiprocessing, geneffect, firm
     >>> n_threads = 4
     >>> thread_pool = multiprocessing.Pool(n_threads)
@@ -38,16 +41,21 @@ Usage
 
 
 Command-line interface
-==========
+----
 
-As of version 1.2.0, FIRM has a command-line interface allowing to interpret a list of variants and determine their effect scores using a generalized scheme that also assigns rule-based scores to non-missense variants (the trained machine-learning predictor is only used for the missense variants). For details, see our recent paper: https://doi.org/10.1101/812289. 
-Note that the effect scores produced by the extended tool are reversed to the scores produced by FIRM's programmatic API (here 0 denotes complete damage, and 1 no effect).
-
-For more details, run:
+The command **firm_determine_extended_gene_effects_and_scores** can be used to interpret a list of variants and determine their effect scores using a generalized scheme that also assigns rule-based scores to non-missense variants (the trained machine-learning predictor is only used for the missense variants). For details, see our recent paper: https://doi.org/10.1101/812289. Note that the effect scores produced by the extended tool are reversed to the scores produced by FIRM's standard API (here 0 denotes complete damage, and 1 no effect). For more details, run:
 
 .. code-block:: cshell
     
     firm_determine_extended_gene_effects_and_scores --help
+    
+Another useful command is **firm_list_all_possible_cds_snps**, allowing to list all possible single-nucleotide variants affecting the coding sequences (CDS) of protein-coding genes, and their effect scores. For more details, run:
+
+.. code-block:: cshell
+    
+    firm_list_all_possible_cds_snps --help
+    
+Pre-calculated effect scores for all possible CDS-affecting single-nucleotide variants are available for versions GRCh38 and hg19 of the human reference genome via FTP at ftp://ftp.cs.huji.ac.il/users/nadavb/firm_data/. 
 
 Installation
 ==========
