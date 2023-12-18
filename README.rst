@@ -55,7 +55,7 @@ Another useful command is **firm_list_all_possible_cds_snps**, allowing to list 
     
     firm_list_all_possible_cds_snps --help
     
-Pre-calculated effect scores for all possible CDS-affecting single-nucleotide variants are available for versions GRCh38 and hg19 of the human reference genome via FTP at ftp://ftp.cs.huji.ac.il/users/nadavb/firm_data/. 
+Pre-calculated effect scores for all possible CDS-affecting single-nucleotide variants are available for versions GRCh38 and hg19 of the human reference genome at https://github.com/nadavbra/firm_processed_files. 
 
 Installation
 ==========
